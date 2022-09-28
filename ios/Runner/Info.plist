@@ -46,6 +46,12 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>The app needs location permission</string>
+    <string>It is necessary for user location-based search.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>It is necessary to display a user's location on a map in real time.</string>
+    <key>NSLocationUsageDescription</key>
+    <string>Older devices need location.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Can I have location always?</string>
 </dict>
 </plist>

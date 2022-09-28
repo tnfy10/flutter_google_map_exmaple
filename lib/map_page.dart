@@ -13,20 +13,20 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  final Completer<GoogleMapController> _controller = Completer();
-  late MapProvider _mapProvider;
+  final Completer<GoogleMapController> _completer = Completer();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      _mapProvider = Provider.of<MapProvider>(context, listen: false);
-      _mapProvider.initAndroidGoogleMapViewMode();
+      Provider.of<MapProvider>(context, listen: false).fetchCurrentLocation();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final mapProvider = Provider.of<MapProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('구글 지도 예제'),
@@ -34,23 +34,29 @@ class _MapPageState extends State<MapPage> {
       body: SizedBox(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
-        child: Consumer<MapProvider>(
-          builder: (context, mapProvider, child) => GoogleMap(
-            mapType: MapType.normal,
-            initialCameraPosition: mapProvider.getCameraPosition(),
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
-            },
-            zoomControlsEnabled: false,
-            myLocationButtonEnabled: false,
-          )
+        child: GoogleMap(
+          mapType: MapType.normal,
+          initialCameraPosition: mapProvider.getCameraPosition(),
+          onMapCreated: (GoogleMapController controller) {
+            _completer.complete(controller);
+          },
+          myLocationEnabled: true,
+          zoomControlsEnabled: false,
+          myLocationButtonEnabled: false,
+          rotateGesturesEnabled: false,
         ),
       ),
       floatingActionButton: FloatingActionButton(
-          onPressed: () {
-
-          },
+          onPressed: () => showCurrentLocation(mapProvider),
           child: const Icon(Icons.location_searching)),
     );
+  }
+
+  void showCurrentLocation(MapProvider mapProvider) async {
+    await mapProvider.fetchCurrentLocation();
+    final cameraPosition = mapProvider.getCameraPosition();
+    final cameraUpdate = CameraUpdate.newCameraPosition(cameraPosition);
+    final controller = await _completer.future;
+    controller.animateCamera(cameraUpdate);
   }
 }

@@ -1,13 +1,11 @@
-import 'dart:io';
-
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapProvider extends ChangeNotifier {
-  double latitude = 37.5666805;      // default latitude
-  double longitude = 126.9784147;    // default longitude
-  double zoom = 14;    // default zoom level
+  double latitude = 37.5666805;      // Default latitude
+  double longitude = 126.9784147;    // Default longitude
+  double zoom = 14;    // Default zoom level
 
   CameraPosition getCameraPosition() {
     return CameraPosition(
@@ -16,20 +14,34 @@ class MapProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> checkLocationPermission() async {
+  Future<Position> determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
 
-  }
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
 
-  Future<void> initCurrentLocation() async {
-
-  }
-
-  Future<void> initAndroidGoogleMapViewMode() async {
-    if (Platform.isAndroid) {
-      var androidInfo = await DeviceInfoPlugin().androidInfo;
-      if (androidInfo.version.sdkInt! >= 29) {
-        AndroidGoogleMapsFlutter.useAndroidViewSurface = true;
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
       }
     }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
+  Future<void> fetchCurrentLocation() async {
+    var pos = await determinePosition();
+    latitude = pos.latitude;
+    longitude = pos.longitude;
   }
 }
